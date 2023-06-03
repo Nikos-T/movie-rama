@@ -1,5 +1,6 @@
 use anyhow::Result;
 
+use diesel::prelude::*;
 use diesel::{PgConnection, RunQueryDsl};
 use diesel::r2d2::{PooledConnection, ConnectionManager};
 
@@ -8,10 +9,18 @@ use crate::schema::users;
 
 type PooledPgConn = PooledConnection<ConnectionManager<PgConnection>>;
 
-pub(crate) fn create_user(conn: &mut PooledPgConn, user: NewUser) -> Result<User> {
+pub fn create_user(conn: &mut PooledPgConn, user: NewUser) -> Result<User> {
     Ok(
         diesel::insert_into(users::table)
             .values(&user)
             .get_result(conn)?
+    )
+}
+
+pub fn get_user_by_email(conn: &mut PooledPgConn, email: &str) -> Result<User> {
+    Ok(
+        users::table
+            .filter(users::email.eq(email))
+            .first(conn)?
     )
 }

@@ -3,6 +3,9 @@
 export let showModal = false;
 export let title = "";
 
+const hideModal = () => {
+    showModal = false;
+}
 </script>
 
 {#if showModal}

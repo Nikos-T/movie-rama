@@ -1,47 +1,137 @@
+// TODO: reading from env every time is slow
 use actix_web::{post, HttpResponse};
 use actix_web::web::{Data, Json};
+use argonautica::{Hasher, Verifier};
+use hmac::Hmac;
+use hmac::digest::KeyInit;
 use serde::{Serialize, Deserialize};
+use sha2::Sha256;
+use jwt::SignWithKey;
 
 use crate::db::Database;
-use crate::models::users::NewUser as NewUserModel;
+use crate::middleware::TokenClaims;
+use crate::models::users::{NewUser, User};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct NewUser {
+pub struct UserBody {
+    pub id: i32,
     pub email: String,
-    pub password_hash: String,
     pub first_name: String,
     pub last_name: String,
 }
 
-impl<'a> Into<NewUserModel<'a>> for &'a NewUser {
-    fn into(self) -> NewUserModel<'a> {
-        let NewUser {
+impl From<User> for UserBody {
+    fn from(user: User) -> Self {
+        let User {
+            id,
             email,
-            password_hash,
+            password_hash: _,
             first_name,
             last_name
-        } = self;
+        } = user;
 
-        NewUserModel {
+        Self {
+            id,
             email,
-            password_hash,
             first_name,
             last_name,
         }
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct NewUserBody {
+    pub email: String,
+    pub password: String,
+    pub first_name: String,
+    pub last_name: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LoginUserBody {
+    pub email: String,
+    pub password: String,
+}
+
 /// Body: [NewUser]
 /// Response: new user's id on success
-/// TODO: jwt
-#[post("/create_user")]
-pub async fn create_user(db: Data<Database>, user: Json<NewUser>) -> HttpResponse {
+#[post("/signup")]
+pub async fn create_user(db: Data<Database>, user: Json<NewUserBody>) -> HttpResponse {
     let user = user.into_inner();
-    let user: NewUserModel = (&user).into();
+
+    let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set");
+    let mut hasher = Hasher::default();
+    println!("SIGN UP =======================================");
+    println!("user.password = {}", user.password);
+    println!("hash_secret = {}", hash_secret);
+    let password_hash = hasher
+        .with_password(user.password)
+        .with_secret_key(hash_secret)
+        .hash()
+        .unwrap();
+
+    let user = NewUser {
+        email: &user.email,
+        password_hash: &password_hash,
+        first_name: &user.first_name,
+        last_name: &user.last_name,
+    };
+
+    println!("NewUser = {user:?}");
     match db.create_user(user) {
-        Ok(user) => HttpResponse::Ok().json(user.id),
+        Ok(user) => {
+            println!("new user = {user:?}");
+            // Shortcut to login directly on sign-up
+            let jwt_secret = Hmac::<Sha256>::new_from_slice(
+                std::env::var("JWT_SECRET").expect("JWT_SECRET must be set").as_bytes()
+            ).unwrap();
+            let claims = TokenClaims { user_id: user.id };
+            let token_str = claims.sign_with_key(&jwt_secret).unwrap();
+            HttpResponse::Ok().json((UserBody::from(user), token_str))
+        }
         Err(e) => HttpResponse::InternalServerError().body(e.to_string()),
     }
 }
 
+#[post("/login")]
+pub async fn login(db: Data<Database>, login_user: Json<LoginUserBody>) -> HttpResponse {
+    let login_user = login_user.into_inner();
+
+    let jwt_secret = Hmac::<Sha256>::new_from_slice(
+        std::env::var("JWT_SECRET").expect("JWT_SECRET must be set").as_bytes()
+    ).unwrap();
+
+    let User {
+        id,
+        email,
+        password_hash,
+        first_name,
+        last_name
+    } = match db.get_user_by_email(&login_user.email) {
+        Ok(u) => u,
+        Err(e) => return HttpResponse::Unauthorized().body(e.to_string()),
+    };
+
+    let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set");
+    let mut verifier = Verifier::default();
+    
+    match verifier.with_hash(&password_hash).with_password(login_user.password).with_secret_key(hash_secret).verify() {
+        Err(e) => {
+            eprintln!("Error verifying password: {}", e);
+            HttpResponse::InternalServerError().body("Error verifying password".to_string())
+        }
+        Ok(false) => HttpResponse::Unauthorized().body("Invalid password".to_string()),
+        Ok(true) => {
+            let claims = TokenClaims { user_id: id };
+            let token_str = claims.sign_with_key(&jwt_secret).unwrap();
+            let user = UserBody {
+                id,
+                email,
+                first_name,
+                last_name,
+            };
+            HttpResponse::Ok().json((user, token_str))
+        }
+    }
+}
 

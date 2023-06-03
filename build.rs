@@ -21,12 +21,16 @@ fn main() -> std::io::Result<()> {
     if !env_file.exists() {
         let current_dir = std::env::current_dir()?;
         let database_url = "postgres://db_admin_user:password123@127.0.0.1/movierama";
+        let jwt_secret = "jwtsecret";
+        let hash_secret = "hashsecret";
         std::fs::write(
             ".env",
             format!(
-                "DATABASE_URL = {}\nSTATIC_FILE_PATH = {}",
+                "DATABASE_URL={}\nSTATIC_FILE_PATH={}\nJWT_SECRET={}\nHASH_SECRET={}\n",
                 database_url,
-                current_dir.join("client/public").display()
+                current_dir.join("client/public").display(),
+                jwt_secret,
+                hash_secret
             ),
         )?;
     }

@@ -1,9 +1,14 @@
 <script>
     import Modal from './components/Modal.svelte';
     import SignUpForm from './SignUpForm.svelte';
+    import LogInForm from './LogInForm.svelte';
 
-    // This should be on a store
-    let loggedIn = false;
+    // These should be on a store instead of dispatched
+    let user;
+
+    const isLoggedIn = () => {
+        return user != undefined;
+    }
 
     let showLogInModal = false;
     let showSignUpModal = false;
@@ -16,6 +21,18 @@
         showSignUpModal = !showSignUpModal;
     }
 
+    const signedUp = (e) => {
+        showSignUpModal = false;
+        user = e.detail;
+        console.log(user);
+    }
+
+    const loggedIn = (e) => {
+        showLogInModal = false;
+        user = e.detail;
+        console.log(user);
+    }
+
 </script>
 
 <header>
@@ -25,7 +42,7 @@
 
 	<div class="corner-right">
 
-        {#if !loggedIn}
+        {#if user == undefined}
             <button on:click={toggleLogInModal}>Log in</button>
             <button on:click={toggleSignUpModal}>Sign up</button>
         {:else}
@@ -35,13 +52,10 @@
 </header>
 
 <Modal title="Log in" showModal={showLogInModal} on:click={toggleLogInModal}>
-    <form>
-        <input type="emai" id="email" placeholder="email"/>
-        <input type="password" id="password" placeholder="password"/>
-    </form>
+    <LogInForm on:loggedIn={loggedIn}/>
 </Modal>
 <Modal title="Sign up" showModal={showSignUpModal} on:click={toggleSignUpModal}>
-<SignUpForm/>
+    <SignUpForm on:signedUp={signedUp}/>
 </Modal>
 
 <style>

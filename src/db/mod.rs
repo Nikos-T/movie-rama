@@ -26,4 +26,9 @@ impl Database {
     pub fn create_user(&self, user: NewUser) -> Result<User> {
         users::create_user(&mut self.pool.get()?, user)
     }
+
+    pub fn get_user_by_email(&self, email: &str) -> Result<User> {
+        users::get_user_by_email(&mut self.pool.get()?, email)
+    }
 }
+

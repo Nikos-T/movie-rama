@@ -1,26 +1,21 @@
 <script>
 // import bcrypt to hash password
-import bcrypt from 'bcryptjs';
 import { createEventDispatcher } from 'svelte';
 
 let dispatch = createEventDispatcher();
 
 let email;
 let password;
-let first_name;
-let last_name;
 
-const handleSignUp = async () => {
-    const res = await fetch('/api/signup', {
+const handleLogIn = async () => {
+    const res = await fetch('/api/login', {
 			method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
 			body: JSON.stringify({
 				email,
-				password,
-                first_name,
-                last_name
+				password
 			})
 		});
 
@@ -32,17 +27,15 @@ const handleSignUp = async () => {
 
     let user = await res.json();
 
-    dispatch('signedUp', user)
+    dispatch('loggedIn', user)
 };
 
 </script>
 
-<form on:submit|preventDefault={handleSignUp}>
+<form on:submit|preventDefault={handleLogIn}>
     <input type="emai" name="email" placeholder="email" bind:value={email}/>
     <input type="password" name="password" placeholder="password" bind:value={password}/>
-    <input type="text" name="first_name" placeholder="first name" bind:value={first_name}/>
-    <input type="text" name="last_name" placeholder="last name" bind:value={last_name}/>
-    <button>Sign up</button>
+    <button>Log in</button>
 </form>
 
 <style>
