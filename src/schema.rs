@@ -1,7 +1,2 @@
-table! {
-    todos (id) {
-        id -> Text,
-        text -> Text,
-        done -> Bool,
-    }
-}
+// @generated automatically by Diesel CLI.
+

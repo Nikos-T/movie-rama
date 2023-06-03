@@ -1,6 +1,0 @@
--- Your SQL goes here
-CREATE TABLE todos (
-  id CHAR(32) PRIMARY KEY NOT NULL,
-  text VARCHAR(255) NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT FALSE
-);
