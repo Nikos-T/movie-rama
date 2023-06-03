@@ -16,7 +16,7 @@ fn main() -> std::io::Result<()> {
 
     // check diesel_cli installed
     if !check_program_installed("diesel") {
-        panic!("diesel_cli is not installed! installing it: 'cargo install diesel_cli --no-default-features --features sqlite'");
+        panic!("diesel_cli is not installed! installing it: 'cargo install diesel_cli --no-default-features --features postgres'");
     }
     let env_file = std::path::Path::new(".env");
     if !env_file.exists() {
@@ -32,14 +32,9 @@ fn main() -> std::io::Result<()> {
         )?;
     }
 
-    #[cfg(not(debug_assertions))]
-    {
-        return build_client();
-    }
-    Ok(())
+    build_client()
 }
 
-#[cfg(not(debug_assertions))]
 fn build_client() -> std::io::Result<()> {
     let node_modules = std::path::Path::new("client/node_modules");
     if !node_modules.exists() {

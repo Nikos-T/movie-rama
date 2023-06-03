@@ -5,13 +5,13 @@ use diesel::prelude::*;
 use crate::models::UpdateTodo;
 
 use self::models::{NewTodo, Todo};
-use diesel::SqliteConnection;
+use diesel::pg::PgConnection;
 use uuid::Uuid;
 
 pub mod models;
 pub mod schema;
 
-pub fn create_todo<'a>(conn: &mut SqliteConnection, text: &'a str, done: bool) -> Todo {
+pub fn create_todo<'a>(conn: &mut PgConnection, text: &'a str, done: bool) -> Todo {
     use schema::todos;
     let new_todo = NewTodo {
         id: &Uuid::new_v4().to_string(),
@@ -32,7 +32,7 @@ pub fn create_todo<'a>(conn: &mut SqliteConnection, text: &'a str, done: bool) -
 }
 
 pub fn update_todo<'a>(
-    conn: &mut SqliteConnection,
+    conn: &mut PgConnection,
     uid: &'a str,
     text: Option<String>,
     done: Option<bool>,
@@ -45,7 +45,7 @@ pub fn update_todo<'a>(
         .expect("Error updating todo");
 }
 
-pub fn delete_todo<'a>(conn: &mut SqliteConnection, uid: &'a str) {
+pub fn delete_todo<'a>(conn: &mut PgConnection, uid: &'a str) {
     let update = schema::todos::dsl::todos.filter(schema::todos::id.eq(uid));
 
     diesel::delete(update)
@@ -53,7 +53,7 @@ pub fn delete_todo<'a>(conn: &mut SqliteConnection, uid: &'a str) {
         .expect("Error updating todo");
 }
 
-pub fn get_todo<'a>(conn: &mut SqliteConnection, uid: &'a str) -> Todo {
+pub fn get_todo<'a>(conn: &mut PgConnection, uid: &'a str) -> Todo {
     use schema::todos::dsl::*;
     todos
         .filter(id.eq(uid))
@@ -62,7 +62,7 @@ pub fn get_todo<'a>(conn: &mut SqliteConnection, uid: &'a str) -> Todo {
 }
 
 pub fn get_todos<'a>(
-    conn: &mut SqliteConnection,
+    conn: &mut PgConnection,
     filter_id: Option<String>,
     filter_text: Option<String>,
     filter_done: Option<bool>,

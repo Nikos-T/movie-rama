@@ -7,3 +7,4 @@
 /target
 node_modules/
 nginx.pid
+/client/public/build

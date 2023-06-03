@@ -1,16 +1,16 @@
 extern crate dotenv;
 
-type DbPool = diesel::r2d2::Pool<ConnectionManager<SqliteConnection>>;
+type DbPool = diesel::r2d2::Pool<ConnectionManager<PgConnection>>;
 use actix_multipart::Multipart;
 use actix_svelte_template::{create_todo, delete_todo, update_todo};
 use actix_web::{
     get, post,
-    web::{self},
+    web::self,
     App, Error, HttpResponse, HttpServer, Responder,
 };
 use diesel::{
     r2d2::{self, ConnectionManager},
-    SqliteConnection,
+    pg::PgConnection
 };
 use futures_util::TryStreamExt as _;
 use serde::{Deserialize, Serialize};
@@ -109,7 +109,7 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let manager = ConnectionManager::<SqliteConnection>::new(database_url);
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
@@ -121,14 +121,12 @@ async fn main() -> std::io::Result<()> {
     let path = std::env::var("STATIC_FILE_PATH").expect("STATIC_FILE_PATH must be set");
     let static_files = String::from(path.strip_suffix("/").unwrap_or(&path));
     HttpServer::new(move || {
-        let app = App::new()
+        App::new()
             .service(create_update_or_delete_todo)
             .service(get_todo)
             .service(get_todos)
-            .app_data(web::Data::new(pool.clone()));
-
-        if cfg!(not(debug_assertions)) {
-            return app.service(
+            .app_data(web::Data::new(pool.clone()))
+            .service(
                 actix_files::Files::new("/", static_files.clone())
                     .index_file("index.html")
                     .default_handler(
@@ -137,9 +135,7 @@ async fn main() -> std::io::Result<()> {
                         )
                         .expect("index file should exist"),
                     ),
-            );
-        }
-        app
+            )
     })
     .bind(("0.0.0.0", port))?
     .run()
