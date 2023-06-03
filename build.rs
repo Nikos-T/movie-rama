@@ -13,7 +13,6 @@ fn main() -> std::io::Result<()> {
     if !check_program_installed("npm") {
         panic!("npm is not installed! install it first.");
     }
-
     // check diesel_cli installed
     if !check_program_installed("diesel") {
         panic!("diesel_cli is not installed! installing it: 'cargo install diesel_cli --no-default-features --features postgres'");
@@ -21,13 +20,13 @@ fn main() -> std::io::Result<()> {
     let env_file = std::path::Path::new(".env");
     if !env_file.exists() {
         let current_dir = std::env::current_dir()?;
-        let database_url = current_dir.join("db.sqlite3");
+        let database_url = "postgres://db_admin_user:password123@127.0.0.1/movierama";
         std::fs::write(
             ".env",
             format!(
                 "DATABASE_URL = {}\nSTATIC_FILE_PATH = {}",
-                database_url.display(),
-                current_dir.join("client/build").display()
+                database_url,
+                current_dir.join("client/public").display()
             ),
         )?;
     }
