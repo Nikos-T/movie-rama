@@ -2,7 +2,6 @@ use argonautica::{Hasher, Verifier};
 
 #[test]
 fn test_argonautica() {
-
     let hash_secret = "hash_secret".to_string();
     let mut hasher = Hasher::default();
     let password_hash = hasher

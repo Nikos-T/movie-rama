@@ -1,5 +1,5 @@
-use diesel::{Insertable, Queryable, AsChangeset};
 use chrono::NaiveDateTime;
+use diesel::{AsChangeset, Insertable, Queryable};
 
 use crate::schema::movies;
 
@@ -10,7 +10,7 @@ pub struct Movie {
     pub posted_by: i32,
     pub posted_at: NaiveDateTime,
     pub title: String,
-    pub description: String
+    pub description: String,
 }
 
 #[derive(Debug, Clone, Insertable)]

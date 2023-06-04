@@ -1,5 +1,6 @@
+use diesel::{AsChangeset, Insertable, Queryable};
+
 use crate::schema::users;
-use diesel::{Insertable, Queryable, AsChangeset};
 
 #[derive(Debug, Clone, Queryable, AsChangeset)]
 #[diesel(table_name=users)]

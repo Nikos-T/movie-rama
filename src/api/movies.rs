@@ -1,5 +1,5 @@
-use actix_web::{post, HttpResponse, get};
 use actix_web::web::{Data, Json, ReqData};
+use actix_web::{get, post, HttpResponse};
 
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
@@ -19,15 +19,39 @@ pub struct MovieBody {
 
 impl From<Movie> for MovieBody {
     fn from(movie: Movie) -> Self {
-        let Movie { id, posted_by, posted_at, title, description } = movie;
-        Self { id, posted_by, posted_at, title, description }
+        let Movie {
+            id,
+            posted_by,
+            posted_at,
+            title,
+            description,
+        } = movie;
+        Self {
+            id,
+            posted_by,
+            posted_at,
+            title,
+            description,
+        }
     }
 }
 
 impl Into<Movie> for MovieBody {
     fn into(self) -> Movie {
-        let MovieBody { id, posted_by, posted_at, title, description } = self;
-        Movie { id, posted_by, posted_at, title, description }
+        let MovieBody {
+            id,
+            posted_by,
+            posted_at,
+            title,
+            description,
+        } = self;
+        Movie {
+            id,
+            posted_by,
+            posted_at,
+            title,
+            description,
+        }
     }
 }
 
@@ -38,22 +62,26 @@ pub struct NewMovieBody {
 }
 
 #[post("/add_movie")]
-pub async fn create_movie(db: Data<Database>, req_user: Option<ReqData<TokenClaims>>, movie: Json<NewMovieBody>) -> HttpResponse {
+pub async fn create_movie(
+    db: Data<Database>,
+    req_user: Option<ReqData<TokenClaims>>,
+    movie: Json<NewMovieBody>,
+) -> HttpResponse {
     let movie = movie.into_inner();
     let movie = match req_user {
-        Some(user) => {
-            NewMovie {
-                posted_by: user.user_id,
-                title: &movie.title,
-                description: &movie.description
-            }
+        Some(user) => NewMovie {
+            posted_by: user.user_id,
+            title: &movie.title,
+            description: &movie.description,
+        },
+        _ => {
+            return HttpResponse::Unauthorized().json("Log in to add a movie.");
         }
-        _ => { return HttpResponse::Unauthorized().json("Log in to add a movie."); }
     };
 
     match db.create_movie(movie) {
         Ok(movie) => HttpResponse::Ok().json(MovieBody::from(movie)),
-        Err(e) => HttpResponse::InternalServerError().json(e.to_string())
+        Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
 }
 
@@ -61,8 +89,17 @@ pub async fn create_movie(db: Data<Database>, req_user: Option<ReqData<TokenClai
 #[get("/movies")]
 pub async fn get_all_movies(db: Data<Database>) -> HttpResponse {
     match db.get_all_movies() {
-        Ok(movies) => HttpResponse::Ok().json(movies.into_iter().map(MovieBody::from).collect::<Vec<_>>()),
-        Err(e) => HttpResponse::InternalServerError().json(e.to_string())
+        Ok(movies) => {
+            HttpResponse::Ok().json(movies.into_iter().map(MovieBody::from).collect::<Vec<_>>())
+        }
+        Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
 }
 
+#[get("/movies_verbose")]
+pub async fn get_movies_verbose(db: Data<Database>) -> HttpResponse {
+    match db.get_movies_verbose() {
+        Ok(movies) => HttpResponse::Ok().json(movies),
+        Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
+    }
+}

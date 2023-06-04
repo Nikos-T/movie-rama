@@ -1,8 +1,8 @@
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 
-use movie_rama::db::Database;
 use movie_rama::api;
+use movie_rama::db::Database;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
