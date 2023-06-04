@@ -41,9 +41,9 @@ pub struct MovieVerbose {
     #[diesel(sql_type = BigInt)]
     pub negative_votes: i64,
     #[diesel(sql_type = Text)]
-    pub first_name: String,
+    pub user_first_name: String,
     #[diesel(sql_type = Text)]
-    pub last_name: String,
+    pub user_last_name: String,
 }
 
 pub fn get_movies_verbose(conn: &mut PooledPgConn) -> Result<Vec<MovieVerbose>> {
@@ -59,8 +59,8 @@ pub fn get_movies_verbose(conn: &mut PooledPgConn) -> Result<Vec<MovieVerbose>> 
                 movies.description,
                 COALESCE(SUM(CASE WHEN votes.vote = 'positive' THEN 1 ELSE 0 END), 0) AS positive_votes,
                 COALESCE(SUM(CASE WHEN votes.vote = 'negative' THEN 1 ELSE 0 END), 0) AS negative_votes,
-                users.first_name,
-                users.last_name
+                users.first_name AS user_first_name,
+                users.last_name AS user_last_name
             FROM
                 movies
             LEFT JOIN

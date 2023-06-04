@@ -28,8 +28,6 @@ const handleAddMovie = async () => {
 
     let json_res = await res.json();
 
-    console.log(json_res);
-
     dispatch('addedMovie')
 };
 
