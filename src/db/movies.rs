@@ -16,3 +16,10 @@ pub fn create_movie(conn: &mut PooledPgConn, movie: NewMovie) -> Result<Movie> {
     )
 }
 
+// TODO: pagination
+pub fn get_all_movies(conn: &mut PooledPgConn) -> Result<Vec<Movie>> {
+    Ok(
+        movies::table
+            .load::<Movie>(conn)?
+    )
+}

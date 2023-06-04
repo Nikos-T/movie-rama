@@ -36,5 +36,9 @@ impl Database {
     pub fn create_movie(&self, movie: NewMovie) -> Result<Movie> {
         movies::create_movie(&mut self.pool.get()?, movie)
     }
+
+    pub fn get_all_movies(&self) -> Result<Vec<Movie>> {
+        movies::get_all_movies(&mut self.pool.get()?)
+    }
 }
 

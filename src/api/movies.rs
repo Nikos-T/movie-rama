@@ -1,4 +1,4 @@
-use actix_web::{post, HttpResponse};
+use actix_web::{post, HttpResponse, get};
 use actix_web::web::{Data, Json, ReqData};
 
 use chrono::NaiveDateTime;
@@ -53,6 +53,15 @@ pub async fn create_movie(db: Data<Database>, req_user: Option<ReqData<TokenClai
 
     match db.create_movie(movie) {
         Ok(movie) => HttpResponse::Ok().json(MovieBody::from(movie)),
+        Err(e) => HttpResponse::InternalServerError().json(e.to_string())
+    }
+}
+
+// TODO pagination
+#[get("/movies")]
+pub async fn get_all_movies(db: Data<Database>) -> HttpResponse {
+    match db.get_all_movies() {
+        Ok(movies) => HttpResponse::Ok().json(movies.into_iter().map(MovieBody::from).collect::<Vec<_>>()),
         Err(e) => HttpResponse::InternalServerError().json(e.to_string())
     }
 }

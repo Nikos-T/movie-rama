@@ -1,6 +1,7 @@
 <script>
 // import bcrypt to hash password
 import { createEventDispatcher } from 'svelte';
+import UserStore from '../stores/UserStore.js';
 
 let dispatch = createEventDispatcher();
 
@@ -25,9 +26,17 @@ const handleLogIn = async () => {
         return;
     }
 
-    let user = await res.json();
+    let json_res = await res.json();
 
-    dispatch('loggedIn', user)
+    UserStore.update(shouldBeEmpty => {
+        // TODO return better json format from api
+        return {
+            user: json_res[0],
+            token: json_res[1]
+        }
+    });
+
+    dispatch('loggedIn')
 };
 
 </script>

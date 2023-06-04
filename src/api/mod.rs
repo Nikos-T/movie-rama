@@ -13,6 +13,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         web::scope("/api")
             .service(users::create_user)
             .service(users::login)
+            .service(movies::get_all_movies)
             .service(
                 web::scope("")
                     .wrap(bearer_middleware)

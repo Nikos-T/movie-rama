@@ -61,9 +61,6 @@ pub async fn create_user(db: Data<Database>, user: Json<NewUserBody>) -> HttpRes
 
     let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set");
     let mut hasher = Hasher::default();
-    println!("SIGN UP =======================================");
-    println!("user.password = {}", user.password);
-    println!("hash_secret = {}", hash_secret);
     let password_hash = hasher
         .with_password(user.password)
         .with_secret_key(hash_secret)
@@ -77,16 +74,15 @@ pub async fn create_user(db: Data<Database>, user: Json<NewUserBody>) -> HttpRes
         last_name: &user.last_name,
     };
 
-    println!("NewUser = {user:?}");
     match db.create_user(user) {
         Ok(user) => {
-            println!("new user = {user:?}");
             // Shortcut to login directly on sign-up
             let jwt_secret = Hmac::<Sha256>::new_from_slice(
                 std::env::var("JWT_SECRET").expect("JWT_SECRET must be set").as_bytes()
             ).unwrap();
             let claims = TokenClaims { user_id: user.id };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
+            // TODO return a better format
             HttpResponse::Ok().json((UserBody::from(user), token_str))
         }
         Err(e) => HttpResponse::InternalServerError().body(e.to_string()),
@@ -130,6 +126,7 @@ pub async fn login(db: Data<Database>, login_user: Json<LoginUserBody>) -> HttpR
                 first_name,
                 last_name,
             };
+            // TODO return a better format
             HttpResponse::Ok().json((user, token_str))
         }
     }
