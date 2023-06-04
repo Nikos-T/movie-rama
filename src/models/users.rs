@@ -2,6 +2,7 @@ use crate::schema::users;
 use diesel::{Insertable, Queryable, AsChangeset};
 
 #[derive(Debug, Clone, Queryable, AsChangeset)]
+#[diesel(table_name=users)]
 pub struct User {
     pub id: i32,
     pub email: String,

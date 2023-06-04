@@ -1,6 +1,17 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    movies (id) {
+        id -> Int4,
+        posted_by -> Int4,
+        posted_at -> Timestamp,
+        #[max_length = 255]
+        title -> Varchar,
+        description -> Text,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         email -> Varchar,
@@ -10,3 +21,10 @@ diesel::table! {
         last_name -> Varchar,
     }
 }
+
+diesel::joinable!(movies -> users (posted_by));
+
+diesel::allow_tables_to_appear_in_same_query!(
+    movies,
+    users,
+);
