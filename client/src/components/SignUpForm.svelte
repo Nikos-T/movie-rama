@@ -36,6 +36,20 @@ const handleSignUp = async () => {
     sessionStorage.setItem('jwtToken', json_res[1]);
     UserStore.set({ user: json_res[0] });
 
+    fetch('/api/get_my_votes', {
+        headers: {
+            'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken')
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        UserStore.update(store_data => {
+            store_data.votes = data;
+            return store_data;
+        });
+    })
+    .catch(err => console.log(err));
+
     dispatch('signedUp')
 };
 
