@@ -1,6 +1,6 @@
 // TODO: reading from env every time is slow
-use actix_web::web::{Data, Json};
-use actix_web::{post, HttpResponse};
+use actix_web::web::{Data, Json, ReqData};
+use actix_web::{get, post, HttpResponse};
 use argonautica::{Hasher, Verifier};
 use hmac::digest::KeyInit;
 use hmac::Hmac;
@@ -140,5 +140,18 @@ pub async fn login(db: Data<Database>, login_user: Json<LoginUserBody>) -> HttpR
             // TODO return a better format
             HttpResponse::Ok().json((user, token_str))
         }
+    }
+}
+
+#[get("/get_user")]
+pub async fn get_user(db: Data<Database>, req_user: Option<ReqData<TokenClaims>>) -> HttpResponse {
+    if let Some(user) = req_user {
+        match db.get_user(user.user_id) {
+            Ok(user) => HttpResponse::Ok().json(UserBody::from(user)),
+            Err(e) => HttpResponse::InternalServerError().body(e.to_string()),
+        }
+    } else {
+        dbg!(req_user);
+        HttpResponse::Unauthorized().body("Unauthorized".to_string())
     }
 }

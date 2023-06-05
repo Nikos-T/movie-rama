@@ -35,6 +35,16 @@
     }
 </script>
 
+<Modal title="Log in" showModal={showLogInModal} on:click={toggleLogInModal}>
+    <LogInForm on:loggedIn={loggedIn}/>
+</Modal>
+<Modal title="Sign up" showModal={showSignUpModal} on:click={toggleSignUpModal}>
+    <SignUpForm on:signedUp={signedUp}/>
+</Modal>
+<Modal title="Add movie" showModal={showAddMovieModal} on:click={toggleAddMovieModal}>
+    <AddMovieForm on:addedMovie={addedMovie}/>
+</Modal>
+
 <header>
 	<div class="corner-left">
         <h1>MovieRama</h1>
@@ -50,16 +60,6 @@
         {/if}
 	</div>
 </header>
-
-<Modal title="Log in" showModal={showLogInModal} on:click={toggleLogInModal}>
-    <LogInForm on:loggedIn={loggedIn}/>
-</Modal>
-<Modal title="Sign up" showModal={showSignUpModal} on:click={toggleSignUpModal}>
-    <SignUpForm on:signedUp={signedUp}/>
-</Modal>
-<Modal title="Add movie" showModal={showAddMovieModal} on:click={toggleAddMovieModal}>
-    <AddMovieForm on:addedMovie={addedMovie}/>
-</Modal>
 
 <style>
 header {

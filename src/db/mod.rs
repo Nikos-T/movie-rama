@@ -31,6 +31,10 @@ impl Database {
         users::create_user(&mut self.pool.get()?, user)
     }
 
+    pub fn get_user(&self, id: i32) -> Result<User> {
+        users::get_user(&mut self.pool.get()?, id)
+    }
+
     pub fn get_user_by_email(&self, email: &str) -> Result<User> {
         users::get_user_by_email(&mut self.pool.get()?, email)
     }

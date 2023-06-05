@@ -28,13 +28,9 @@ const handleLogIn = async () => {
 
     let json_res = await res.json();
 
-    UserStore.update(shouldBeEmpty => {
-        // TODO return better json format from api
-        return {
-            user: json_res[0],
-            token: json_res[1]
-        }
-    });
+    // TODO return better json format from api
+    sessionStorage.setItem('jwtToken', json_res[1]);
+    UserStore.set({ user: json_res[0] });
 
     dispatch('loggedIn')
 };

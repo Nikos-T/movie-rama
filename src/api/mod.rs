@@ -21,7 +21,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
                     .wrap(bearer_middleware)
                     .service(movies::create_movie)
                     .service(votes::create_vote)
-                    .service(votes::delete_vote),
+                    .service(votes::delete_vote)
+                    .service(users::get_user),
             ),
     );
 }

@@ -1,7 +1,21 @@
 <script>
     import Header from './components/Header.svelte';
     import MovieStore from './stores/MovieStore.js';
+    import UserStore from './stores/UserStore.js';
     import _ from 'lodash';
+
+    if (sessionStorage.getItem('jwtToken') != null) {
+        fetch('/api/get_user', {
+            headers: {
+                'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken')
+            }
+		})
+        .then(res => res.json())
+        .then(data => {
+            UserStore.set({ user: data });
+        })
+        .catch(err => console.log(err));
+    }
 
     // update MovieStore from /api/movies
     fetch('/api/movies_verbose')

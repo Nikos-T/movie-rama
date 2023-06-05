@@ -12,7 +12,7 @@ const handleAddMovie = async () => {
 			method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + $UserStore.token
+                'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken')
             },
 			body: JSON.stringify({
 				title,

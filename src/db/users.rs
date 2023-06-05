@@ -18,3 +18,7 @@ pub fn create_user(conn: &mut PooledPgConn, user: NewUser) -> Result<User> {
 pub fn get_user_by_email(conn: &mut PooledPgConn, email: &str) -> Result<User> {
     Ok(users::table.filter(users::email.eq(email)).first(conn)?)
 }
+
+pub fn get_user(conn: &mut PooledPgConn, id: i32) -> Result<User> {
+    Ok(users::table.find(id).first(conn)?)
+}
