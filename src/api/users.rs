@@ -8,7 +8,7 @@ use jwt::SignWithKey;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
-use crate::db::Database;
+use crate::AppState;
 use crate::middleware::TokenClaims;
 use crate::models::users::{NewUser, User};
 
@@ -56,10 +56,10 @@ pub struct LoginUserBody {
 /// Body: [NewUser]
 /// Response: new user's id on success
 #[post("/signup")]
-pub async fn create_user(db: Data<Database>, user: Json<NewUserBody>) -> HttpResponse {
+pub async fn create_user(app_data: Data<AppState>, user: Json<NewUserBody>) -> HttpResponse {
     let user = user.into_inner();
 
-    let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set");
+    let hash_secret = app_data.hash_secret();
     let mut hasher = Hasher::default();
     let password_hash = hasher
         .with_password(user.password)
@@ -74,15 +74,12 @@ pub async fn create_user(db: Data<Database>, user: Json<NewUserBody>) -> HttpRes
         last_name: &user.last_name,
     };
 
-    match db.create_user(user) {
+    match app_data.db.create_user(user) {
         Ok(user) => {
             // Shortcut to login directly on sign-up
             let jwt_secret = Hmac::<Sha256>::new_from_slice(
-                std::env::var("JWT_SECRET")
-                    .expect("JWT_SECRET must be set")
-                    .as_bytes(),
-            )
-            .unwrap();
+                app_data.jwt_secret().as_bytes(),
+            ).unwrap();
             let claims = TokenClaims { user_id: user.id };
             let token_str = claims.sign_with_key(&jwt_secret).unwrap();
             // TODO return a better format
@@ -93,15 +90,12 @@ pub async fn create_user(db: Data<Database>, user: Json<NewUserBody>) -> HttpRes
 }
 
 #[post("/login")]
-pub async fn login(db: Data<Database>, login_user: Json<LoginUserBody>) -> HttpResponse {
+pub async fn login(app_data: Data<AppState>, login_user: Json<LoginUserBody>) -> HttpResponse {
     let login_user = login_user.into_inner();
 
     let jwt_secret = Hmac::<Sha256>::new_from_slice(
-        std::env::var("JWT_SECRET")
-            .expect("JWT_SECRET must be set")
-            .as_bytes(),
-    )
-    .unwrap();
+        app_data.jwt_secret().as_bytes(),
+    ) .unwrap();
 
     let User {
         id,
@@ -109,12 +103,12 @@ pub async fn login(db: Data<Database>, login_user: Json<LoginUserBody>) -> HttpR
         password_hash,
         first_name,
         last_name,
-    } = match db.get_user_by_email(&login_user.email) {
+    } = match app_data.db.get_user_by_email(&login_user.email) {
         Ok(u) => u,
         Err(e) => return HttpResponse::Unauthorized().body(e.to_string()),
     };
 
-    let hash_secret = std::env::var("HASH_SECRET").expect("HASH_SECRET must be set");
+    let hash_secret = app_data.hash_secret();
     let mut verifier = Verifier::default();
 
     match verifier
@@ -144,9 +138,9 @@ pub async fn login(db: Data<Database>, login_user: Json<LoginUserBody>) -> HttpR
 }
 
 #[get("/get_user")]
-pub async fn get_user(db: Data<Database>, req_user: Option<ReqData<TokenClaims>>) -> HttpResponse {
+pub async fn get_user(app_data: Data<AppState>, req_user: Option<ReqData<TokenClaims>>) -> HttpResponse {
     if let Some(user) = req_user {
-        match db.get_user(user.user_id) {
+        match app_data.db.get_user(user.user_id) {
             Ok(user) => HttpResponse::Ok().json(UserBody::from(user)),
             Err(e) => HttpResponse::InternalServerError().body(e.to_string()),
         }

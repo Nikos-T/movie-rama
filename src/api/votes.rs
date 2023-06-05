@@ -3,7 +3,7 @@ use actix_web::{post, HttpResponse, get, delete};
 
 use serde::{Deserialize, Serialize};
 
-use crate::db::Database;
+use crate::AppState;
 use crate::middleware::TokenClaims;
 use crate::models::votes::{Vote, VoteType};
 
@@ -48,7 +48,7 @@ pub struct DeleteVoteBody {
 
 #[post("/vote")]
 pub async fn create_vote(
-    db: Data<Database>,
+    app_data: Data<AppState>,
     req_user: Option<ReqData<TokenClaims>>,
     vote: Json<UserVoteBody>,
 ) -> HttpResponse {
@@ -64,7 +64,7 @@ pub async fn create_vote(
         }
     };
 
-    match db.vote(vote) {
+    match app_data.db.vote(vote) {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
@@ -72,7 +72,7 @@ pub async fn create_vote(
 
 #[delete("/delete_vote")]
 pub async fn delete_vote(
-    db: Data<Database>,
+    app_data: Data<AppState>,
     req_user: Option<ReqData<TokenClaims>>,
     to_delete: Json<DeleteVoteBody>,
 ) -> HttpResponse {
@@ -84,7 +84,7 @@ pub async fn delete_vote(
         }
     };
 
-    match db.delete_vode(to_delete) {
+    match app_data.db.delete_vode(to_delete) {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
@@ -92,7 +92,7 @@ pub async fn delete_vote(
 
 #[get("/get_my_votes")]
 pub async fn get_user_votes(
-    db: Data<Database>,
+    app_data: Data<AppState>,
     req_user: Option<ReqData<TokenClaims>>,
 ) -> HttpResponse {
     let user_id = match req_user {
@@ -102,7 +102,7 @@ pub async fn get_user_votes(
         }
     };
 
-    match db.get_votes_by_user(user_id) {
+    match app_data.db.get_votes_by_user(user_id) {
         Ok(votes) => {
             let votes = votes
                             .into_iter()

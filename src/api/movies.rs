@@ -4,7 +4,7 @@ use actix_web::{get, post, HttpResponse};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use crate::db::Database;
+use crate::AppState;
 use crate::middleware::TokenClaims;
 use crate::models::movies::{Movie, NewMovie};
 
@@ -63,7 +63,7 @@ pub struct NewMovieBody {
 
 #[post("/add_movie")]
 pub async fn create_movie(
-    db: Data<Database>,
+    app_data: Data<AppState>,
     req_user: Option<ReqData<TokenClaims>>,
     movie: Json<NewMovieBody>,
 ) -> HttpResponse {
@@ -79,7 +79,7 @@ pub async fn create_movie(
         }
     };
 
-    match db.create_movie(movie) {
+    match app_data.db.create_movie(movie) {
         Ok(movie) => HttpResponse::Ok().json(MovieBody::from(movie)),
         Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
@@ -87,8 +87,8 @@ pub async fn create_movie(
 
 // TODO pagination
 #[get("/movies")]
-pub async fn get_all_movies(db: Data<Database>) -> HttpResponse {
-    match db.get_all_movies() {
+pub async fn get_all_movies(app_data: Data<AppState>) -> HttpResponse {
+    match app_data.db.get_all_movies() {
         Ok(movies) => {
             HttpResponse::Ok().json(movies.into_iter().map(MovieBody::from).collect::<Vec<_>>())
         }
@@ -97,9 +97,10 @@ pub async fn get_all_movies(db: Data<Database>) -> HttpResponse {
 }
 
 #[get("/movies_verbose")]
-pub async fn get_movies_verbose(db: Data<Database>) -> HttpResponse {
-    match db.get_movies_verbose() {
+pub async fn get_movies_verbose(app_data: Data<AppState>) -> HttpResponse {
+    match app_data.db.get_movies_verbose() {
         Ok(movies) => HttpResponse::Ok().json(movies),
         Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
 }
+

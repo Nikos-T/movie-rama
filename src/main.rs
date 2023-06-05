@@ -1,8 +1,11 @@
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 
+use movie_rama::AppState;
 use movie_rama::api;
 use movie_rama::db::Database;
+
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -10,6 +13,12 @@ async fn main() -> std::io::Result<()> {
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db = Database::new(database_url);
+    let app_state = AppState::new(
+        db,
+        std::env::var("JWT_SECRET").expect("JWT_SECRET must be set"),
+        std::env::var("HASH_SECRET").expect("HASH_SECRET must be set")
+    );
+
 
     let port: u16 = std::env::var("PORT")
         .unwrap_or("8080".to_string())
@@ -21,7 +30,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(db.clone()))
+            .app_data(web::Data::new(app_state.clone()))
             .wrap(Cors::permissive())
             .configure(api::config)
             .service(

@@ -58,6 +58,14 @@ const handleThumbsUp = async () => {
         });
 
         if (res.ok) {
+            if (vote == "negative") {
+                // decrease negative votes first
+                MovieStore.update((movies) => {
+                    let movieToUpdate = movies.find(m => m.movie_id === movie.movie_id);
+                    movieToUpdate.negative_votes--;
+                    return movies;
+                });
+            }
             vote = "positive";
 
             // increase positive_votes for movie
@@ -127,6 +135,15 @@ const handleThumbsDown = async () => {
         });
 
         if (res.ok) {
+            if (vote == "positive") {
+                // Decrease positive votes first
+                MovieStore.update((movies) => {
+                    let movieToUpdate = movies.find(m => m.movie_id === movie.movie_id);
+                    movieToUpdate.positive_votes--;
+                    return movies;
+                });
+            }
+
             vote = "negative";
 
             // increase negative_votes for movie
