@@ -1,6 +1,7 @@
 <script>
 import { createEventDispatcher } from 'svelte';
 import UserStore from '../stores/UserStore.js';
+import MovieStore from '../stores/MovieStore.js';
 
 let dispatch = createEventDispatcher();
 
@@ -27,6 +28,22 @@ const handleAddMovie = async () => {
     }
 
     let json_res = await res.json();
+
+    let movie_verbose = {
+        description: json_res.description,
+        movie_id: json_res.id,
+        negative_votes: 0,
+        positive_votes: 0,
+        posted_at: json_res.posted_at,
+        posted_by: json_res.posted_by,
+        title: json_res.title,
+        user_first_name: $UserStore.user.first_name,
+        user_last_name: $UserStore.user.last_name,
+    };
+
+    MovieStore.update((movies) => {
+        return [movie_verbose, ...movies];
+    });
 
     dispatch('addedMovie')
 };
