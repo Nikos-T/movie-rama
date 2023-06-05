@@ -51,6 +51,10 @@ impl Database {
         votes::vote(&mut self.pool.get()?, vote)
     }
 
+    pub fn get_votes_by_user(&self, user_id: i32) -> Result<Vec<Vote>> {
+        votes::get_votes_by_user(&mut self.pool.get()?, user_id)
+    }
+
     pub fn delete_vode(&self, (user_id, movie_id): (i32, i32)) -> Result<()> {
         votes::delete_vote(&mut self.pool.get()?, (user_id, movie_id))
     }

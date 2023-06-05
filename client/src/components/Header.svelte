@@ -51,7 +51,7 @@
 	</div>
 
 	<div class="corner-right">
-        {#if $UserStore == null}
+        {#if $UserStore.user == null}
             <button on:click={toggleLogInModal}>Log in</button>
             <button on:click={toggleSignUpModal}>Sign up</button>
         {:else}

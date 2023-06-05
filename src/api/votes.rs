@@ -1,5 +1,5 @@
 use actix_web::web::{Data, Json, ReqData};
-use actix_web::{post, HttpResponse};
+use actix_web::{post, HttpResponse, get, delete};
 
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,8 @@ use crate::db::Database;
 use crate::middleware::TokenClaims;
 use crate::models::votes::{Vote, VoteType};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum VoteTypeBody {
     Positive,
     Negative,
@@ -22,10 +23,22 @@ impl Into<VoteType> for VoteTypeBody {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct NewVoteBody {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UserVoteBody {
     pub movie_id: i32,
     pub vote: VoteTypeBody,
+}
+
+impl From<Vote> for UserVoteBody {
+    fn from(vote: Vote) -> Self {
+        Self {
+            movie_id: vote.movie_id,
+            vote: match vote.vote {
+                VoteType::Positive => VoteTypeBody::Positive,
+                VoteType::Negative => VoteTypeBody::Negative,
+            },
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -37,7 +50,7 @@ pub struct DeleteVoteBody {
 pub async fn create_vote(
     db: Data<Database>,
     req_user: Option<ReqData<TokenClaims>>,
-    vote: Json<NewVoteBody>,
+    vote: Json<UserVoteBody>,
 ) -> HttpResponse {
     let vote = vote.into_inner();
     let vote = match req_user {
@@ -57,7 +70,7 @@ pub async fn create_vote(
     }
 }
 
-#[post("/delete_vote")]
+#[delete("/delete_vote")]
 pub async fn delete_vote(
     db: Data<Database>,
     req_user: Option<ReqData<TokenClaims>>,
@@ -76,3 +89,28 @@ pub async fn delete_vote(
         Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
     }
 }
+
+#[get("/get_my_votes")]
+pub async fn get_user_votes(
+    db: Data<Database>,
+    req_user: Option<ReqData<TokenClaims>>,
+) -> HttpResponse {
+    let user_id = match req_user {
+        Some(user) => user.user_id,
+        _ => {
+            return HttpResponse::Unauthorized().json("Log in to get your votes.");
+        }
+    };
+
+    match db.get_votes_by_user(user_id) {
+        Ok(votes) => {
+            let votes = votes
+                            .into_iter()
+                            .map(|vote| UserVoteBody::from(vote))
+                            .collect::<Vec<UserVoteBody>>();
+            HttpResponse::Ok().json(votes)
+        }
+        Err(e) => HttpResponse::InternalServerError().json(e.to_string()),
+    }
+}
+

@@ -1,5 +1,6 @@
 <script>
     import Header from './components/Header.svelte';
+    import MovieCard from  './components/MovieCard.svelte';
     import MovieStore from './stores/MovieStore.js';
     import UserStore from './stores/UserStore.js';
     import _ from 'lodash';
@@ -12,7 +13,24 @@
 		})
         .then(res => res.json())
         .then(data => {
-            UserStore.set({ user: data });
+            UserStore.update(store_data => {
+                store_data.user = data;
+                return store_data;
+            });
+        })
+        .catch(err => console.log(err));
+
+        fetch('/api/get_my_votes', {
+            headers: {
+                'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken')
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            UserStore.update(store_data => {
+                store_data.votes = data;
+                return store_data;
+            });
         })
         .catch(err => console.log(err));
     }
@@ -102,34 +120,25 @@
     </div>
     <!-- TODO: Filter before ordering -->
     {#if filter_user != null}
-    <h4>Showing movies added by {filter_user.first_name} {filter_user.last_name} <span class="clickable" style="color: red;" on:click={() => {filter_user = null;}}><b><u>✖</u></b></span></h4>
+    <h4>Showing movies added by {filter_user.first_name} {filter_user.last_name} <span class="redclickable" on:click={() => {filter_user = null;}}><b><u>✖</u></b></span></h4>
     {/if}
     {#each _.orderBy($MovieStore, [param], [order]) as movie (movie.movie_id)}
     <!-- {#each $MovieStore as movie (movie.id)} -->
         {#if filter_user == null || filter_user.id == movie.posted_by}
-        <div>
-            <h3>{movie.title}</h3>
-            <p><i>Posted by 
-                <span class="clickable" on:click={() => {filter_user = {id: movie.posted_by, first_name: movie.user_first_name, last_name: movie.user_last_name};}}>
-                    {movie.user_first_name} {movie.user_last_name}
-                </span>
-            at {movie.posted_at}</i></p>
-            <p>{movie.description}</p>
-            <p>{movie.positive_votes} likes | {movie.negative_votes} hates</p>
-        </div>
+        <MovieCard movie={movie} on:userClicked={(e) => {filter_user = e.detail;}}/>
         {/if}
     {/each}
 </main>
 
 <style>
-.clickable {
+.redclickable {
   cursor: pointer;
-  color: blue;
+  color: red;
   text-decoration: underline;
 }
 
-.clickable:hover {
-  color: darkblue;
+.redclickable:hover {
+  color: darkred;
 }
     /*
 	main {

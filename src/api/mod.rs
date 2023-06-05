@@ -22,7 +22,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
                     .service(movies::create_movie)
                     .service(votes::create_vote)
                     .service(votes::delete_vote)
-                    .service(users::get_user),
+                    .service(users::get_user)
+                    .service(votes::get_user_votes)
             ),
     );
 }

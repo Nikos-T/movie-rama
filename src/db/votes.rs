@@ -41,3 +41,11 @@ pub fn delete_vote(conn: &mut PooledPgConn, (user_id, movie_id): (i32, i32)) -> 
         .execute(conn)?;
     Ok(())
 }
+
+pub fn get_votes_by_user(conn: &mut PooledPgConn, user_id: i32) -> Result<Vec<Vote>> {
+    let votes = votes::table
+        .filter(votes::user_id.eq(user_id))
+        .load::<Vote>(conn)?;
+    Ok(votes)
+}
+
